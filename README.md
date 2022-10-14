@@ -1,3 +1,6 @@
+# ExaltedPlus
+ Enhancements for paragon reputations
+
 Displays paragon reputation on bars in the reputation frame, with rollover text showing values.
 
 Fades out bag icons on reputation bars until a reward is ready for that faction.
