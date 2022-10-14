@@ -3,5 +3,8 @@
 ## Notes: Enhancements for paragon reputations
 ## Author: Kanegasi
 ## SavedVariables: ExaltedPlusFactions
+## X-Curse-Project-ID: 264245
+## X-WoWI-ID: 24383
+## X-Wago-ID: kaNe3XK2
 
 epcore.lua
