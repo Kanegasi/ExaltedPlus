@@ -12,3 +12,4 @@ ExaltedPlus is only hosted at these links:
 https://github.com/Kanegasi/ExaltedPlus  
 https://www.curseforge.com/wow/addons/exaltedplus  
 https://www.wowinterface.com/downloads/info24383-ExaltedPlus.html  
+https://addons.wago.io/addons/exaltedplus  
