@@ -1,7 +1,6 @@
-## Interface: 80000
+## Interface: 90207
 ## Title: ExaltedPlus
 ## Notes: Enhancements for paragon reputations
-## Version: 15
 ## Author: Kanegasi
 ## SavedVariables: ExaltedPlusFactions
 

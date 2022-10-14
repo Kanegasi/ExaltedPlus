@@ -1,4 +1,4 @@
-local faction,buln,rpt,f={},BreakUpLargeNumbers,EmbeddedItemTooltip,CreateFrame("frame") f.c=FACTION_BAR_COLORS ExaltedPlusFactions={}
+local faction,buln,f={},BreakUpLargeNumbers,CreateFrame("frame") f.c=FACTION_BAR_COLORS ExaltedPlusFactions={}
 function f.enumfactions()
 	if not f.load then for id in next,ExaltedPlusFactions do if not faction[id] then faction[id]={} end end f.load=true end
 	for id in next,faction do
@@ -22,13 +22,20 @@ f:SetScript("OnUpdate",function(s,e)
 	end end
 	if s.wrw then f.wb.StatusBar:SetStatusBarColor(f.c[8].r,f.c[8].g,f.c[8].b,s.a) end
 end)
-hooksecurefunc("EmbeddedItemTooltip_SetItemByQuestReward",function(tt,t) f.update()
-	if tt==rpt.ItemTooltip and rpt.factionID and faction[rpt.factionID] and faction[rpt.factionID].t then
-		t=format(ARCHAEOLOGY_COMPLETION,faction[rpt.factionID].t)
-		rpt:AddLine(t) tt.Tooltip:AddLine("\n") tt.Tooltip:Show()
-		for i=1,rpt:NumLines() do if _G[rpt:GetName().."TextLeft"..i]:GetText()==t then
-			_G[rpt:GetName().."TextLeft"..i]:SetPoint("BOTTOMLEFT",0,-70)
-		end end
+local function gttfind(q,...)
+	for i=1,select("#",...) do
+		local r=select(i,...)
+		if r and r.GetText and r:GetText()==q then
+			return r
+		end
+	end
+	return {SetText=function(_,t) GameTooltip:AddLine(t) GameTooltip:Show() end}
+end
+hooksecurefunc("EmbeddedItemTooltip_SetItemByQuestReward",function(mf,t)
+	f.update() mf=GetMouseFocus()
+	if mf and mf.factionID and faction[mf.factionID] and faction[mf.factionID].t then
+		t=format(ARCHAEOLOGY_COMPLETION,faction[mf.factionID].t)
+		gttfind(REWARDS,GameTooltip:GetRegions()):SetText(t)
 	end
 end)
 hooksecurefunc(StatusTrackingBarManager,"UpdateBarsShown",function(_,n,r,id) f.update()
