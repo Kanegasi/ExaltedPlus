@@ -1,69 +1,68 @@
-local faction,buln,f={},BreakUpLargeNumbers,CreateFrame("frame")wasdf=faction
-f.c=FACTION_BAR_COLORS
+local factions,buln,frame={},BreakUpLargeNumbers,CreateFrame("frame")
 ExaltedPlusFactions={}
-function f.enumfactions()
-	if not f.load then
-		for id in next,ExaltedPlusFactions do
-			if not faction[id] then
-				faction[id]={}
-			end
+function frame.enumfactions()
+	if not frame.loaded then
+		frame.loaded=true
+		for id in pairs(ExaltedPlusFactions) do
+			factions[id]={}
 		end
-		f.load=true
 	end
-	for id in next,faction do
-		v,faction[id].m,_,faction[id].rw=C_Reputation.GetFactionParagonInfo(id)
-		if v then
-			faction[id].t=faction[id].rw and math.modf(v/faction[id].m)-1 or math.modf(v/faction[id].m)
-			faction[id].v=mod(v,faction[id].m)
+	for id,faction in pairs(factions) do
+		value,faction.max,_,faction.reward=C_Reputation.GetFactionParagonInfo(id)
+		if value then
+			faction.timesdone=faction.reward and math.modf(value/faction.max)-1 or math.modf(value/faction.max)
+			faction.value=mod(value,faction.max)
 		end
 	end
 end
-function f.update(_,id,v)
-	for _,k in ReputationFrame.ScrollBox:EnumerateFrames() do
-		if k.factionID and C_Reputation.IsFactionParagon(k.factionID) then
-			id=k.factionID
-			if not faction[id] then
-				faction[id]={}
-			end
-			faction[id].fr=k.Container.Paragon
-			if not ExaltedPlusFactions[id] then
-				ExaltedPlusFactions[id]=true
+function frame.update()
+	for _,row in ReputationFrame.ScrollBox:EnumerateFrames() do
+		if row.factionID then
+			if C_Reputation.IsFactionParagon(row.factionID) then
+				if not factions[row.factionID] then
+					factions[row.factionID]={}
+				end
+				factions[row.factionID].row=row
+			else
+				ExaltedPlusFactions[row.factionID]=nil
 			end
 		end
 	end
-	f.enumfactions()
-	f.rfv=ReputationFrame:IsVisible()
-	for k,v in next,StatusTrackingBarManager.bars do
-		if v.factionID then
-			f.wb=v
+	frame.enumfactions()
+	frame.repframevis=ReputationFrame:IsVisible()
+	for _,bar in pairs(StatusTrackingBarManager.bars) do
+		if bar.factionID then
+			frame.watchbar=bar
 		end
 	end
 end
-f:SetScript("OnUpdate",function(s,e)
-	if not s.a then
-		s.a=0.3
+frame:SetScript("OnUpdate",function(self,elapsed)
+	if not self.alpha then
+		self.alpha=0.3
 	end
-	if s.b then
-		s.a=s.a-e
+	if self.reverse then
+		self.alpha=self.alpha-elapsed
 	else
-		s.a=s.a+e
+		self.alpha=self.alpha+elapsed
 	end
-	if s.a>=1 then
-		s.a=1
-		s.b=true
-	elseif s.a<=0.3 then
-		s.a=0.3
-		s.b=false
+	if self.alpha>=1 then
+		self.alpha=1
+		self.reverse=true
+	elseif self.alpha<=0.3 then
+		self.alpha=0.3
+		self.reverse=false
 	end
-	if s.rfv then
-		for i=1,NUM_FACTIONS_DISPLAYED do
-			if s[i] then
-				_G["ReputationBar"..i.."ReputationBar"]:SetStatusBarColor(f.c[8].r,f.c[8].g,f.c[8].b,s.a)
+	if self.repframevis then
+		for _,faction in pairs(factions) do
+			if faction.reward then
+				local red,green,blue=faction.row.Container.ReputationBar:GetStatusBarColor()
+				faction.row.Container.ReputationBar:SetStatusBarColor(red,green,blue,self.alpha)
 			end
 		end
 	end
-	if s.wrw then
-		f.wb.StatusBar:SetStatusBarColor(f.c[8].r,f.c[8].g,f.c[8].b,s.a)
+	if self.pulsewatchbar then
+		local red,green,blue=frame.watchbar.StatusBar:GetStatusBarColor()
+		frame.watchbar.StatusBar:SetStatusBarColor(red,green,blue,self.alpha)
 	end
 end)
 local function gttfind(q,...)
@@ -75,51 +74,41 @@ local function gttfind(q,...)
 	end
 	return {SetText=function(_,t) GameTooltip:AddLine(t) GameTooltip:Show() end}
 end
-hooksecurefunc("EmbeddedItemTooltip_SetItemByQuestReward",function(mf,t)
-	f.update()
-	mf=GetMouseFocus()
-	if mf and mf.factionID and faction[mf.factionID] and faction[mf.factionID].t then
-		t=format(ARCHAEOLOGY_COMPLETION,faction[mf.factionID].t)
-		gttfind(REWARDS,GameTooltip:GetRegions()):SetText(t)
+hooksecurefunc("EmbeddedItemTooltip_SetItemByQuestReward",function()
+	frame.update()
+	local mf=GetMouseFocus()
+	if mf and mf.factionID and factions[mf.factionID] and factions[mf.factionID].timesdone then
+		local text=format(ARCHAEOLOGY_COMPLETION,factions[mf.factionID].timesdone)
+		gttfind(REWARDS,GameTooltip:GetRegions()):SetText(text)
 	end
 end)
 hooksecurefunc(StatusTrackingBarManager,"UpdateBarsShown",function(_,n,r,id)
-	f.update()
-	if f.wb and f.wb:IsShown() then
-		n,r,_,_,_,id=GetWatchedFactionInfo()
-		if faction[id] and faction[id].rw then
-			f.wrw=true
-			f.wb.name=n.." "..faction[id].v.." / "..faction[id].m
-			f.wb.StatusBar:SetAnimatedValues(faction[id].v,0,faction[id].m,r)
-			f.wb.OverlayFrame.Text:SetText(n.." "..faction[id].v.." / "..faction[id].m)
-		elseif id then
-			f.wrw=nil
-			r=(GetFriendshipReputation(id)) and 5 or r
-			f.wb.StatusBar:SetStatusBarColor(f.c[r].r,f.c[r].g,f.c[r].b,1)
+	frame.update()
+	if frame.watchbar and frame.watchbar:IsShown() then
+		local factionName,reaction,_,_,_,factionID=GetWatchedFactionInfo()
+		if factions[factionID] and factions[factionID].reward then
+			frame.pulsewatchbar=true
+			local bartext=factionName.." "..factions[factionID].value.." / "..factions[factionID].max
+			frame.watchbar.name=bartext
+			frame.watchbar:SetBarText(bartext)
+			frame.watchbar:SetBarValues(factions[factionID].value,0,factions[factionID].max,reaction)
 		else
-			f.wrw=nil
+			frame.pulsewatchbar=nil
+			local red,green,blue=frame.watchbar.StatusBar:GetStatusBarColor()
+			frame.watchbar.StatusBar:SetStatusBarColor(red,green,blue,1)
 		end
 	end
 end)
-hooksecurefunc("ReputationParagonFrame_OnUpdate",function(_,n,id,x,bar,row)
-	f.update()
-	for _,k in ReputationFrame.ScrollBox:EnumerateFrames() do
-		n,_,_,_,_,_,_,_,_,_,_,_,_,id=GetFactionInfo(k.factionID)
-		if ExaltedPlusFactions[id] then
-			ExaltedPlusFactions[id]=n
-		end
-		if faction[id] and faction[id].v and faction[id].fr then print("updated "..n)
-			--f[i]=faction[id].rw or nil
-			bar=k.Container.ReputationBar
-			row=k.Container
-			bar:SetMinMaxValues(0,faction[id].m) bar:SetValue(faction[id].v)
-			row.rolloverText=" "..format(REPUTATION_PROGRESS_FORMAT,buln(faction[id].v),buln(faction[id].m))
-			faction[id].fr.Check:SetShown(false)
-			faction[id].fr.Glow:SetShown(false)
-			faction[id].fr.Highlight:SetShown(false)
-			faction[id].fr.Icon:SetAlpha(faction[id].rw and 1 or 0.3)
-		else
-			--f[i]=nil
-		end
+hooksecurefunc("ReputationFrame_InitReputationRow",function(row)
+	frame.update()
+	if row.factionID and factions[row.factionID] and factions[row.factionID].value and factions[row.factionID].max then
+		ExaltedPlusFactions[row.factionID]=GetFactionInfo(row.index)
+		row.rolloverText=" "..format(REPUTATION_PROGRESS_FORMAT,buln(factions[row.factionID].value),buln(factions[row.factionID].max))
+		row.Container.ReputationBar:SetMinMaxValues(0,factions[row.factionID].max)
+		row.Container.ReputationBar:SetValue(factions[row.factionID].value)
+		row.Container.Paragon.Check:SetShown(false)
+		row.Container.Paragon.Glow:SetShown(false)
+		row.Container.Paragon.Highlight:SetShown(false)
+		row.Container.Paragon.Icon:SetAlpha(factions[row.factionID].reward and 1 or 0.3)
 	end
 end)
