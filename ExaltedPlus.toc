@@ -2,6 +2,7 @@
 ## Title: ExaltedPlus
 ## Notes: Enhancements for paragon reputations
 ## Author: Kanegasi
+## Version: @project-version@
 ## SavedVariables: ExaltedPlusFactions
 ## X-Curse-Project-ID: 264245
 ## X-WoWI-ID: 24383
