@@ -1,5 +1,4 @@
 # ExaltedPlus
- Enhancements for paragon reputations
 
 Displays paragon reputation on bars in the reputation frame, with rollover text showing values.
 
