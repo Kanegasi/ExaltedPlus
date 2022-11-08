@@ -54,7 +54,7 @@ frame:SetScript("OnUpdate",function(self,elapsed)
 	end
 	if self.repframevis then
 		for _,faction in pairs(factions) do
-			if faction.reward then
+			if faction.reward and faction.row then
 				local red,green,blue=faction.row.Container.ReputationBar:GetStatusBarColor()
 				faction.row.Container.ReputationBar:SetStatusBarColor(red,green,blue,self.alpha)
 			end
